@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  
+  <parent>
+    <groupId>com.oracle.weblogic.archetype</groupId>
+    <artifactId>wls-common</artifactId>
+    <version>12.1.3-0-0</version>
+  </parent>
+  
+	<properties>
+		<oracleUsername>weblogic</oracleUsername>
+		<oraclePassword>weblogic123</oraclePassword>
+		<oracleServerUrl>t3://mocs-app3.dev.asd.census.gov:7101</oracleServerUrl>
+		<oracleServerName>AdminServer</oracleServerName>
+		<oracleMiddlewareHome>/data/oracle/fmw12c</oracleMiddlewareHome>
+		<oracleHome>/data/oracle/fmw12c</oracleHome>
+		<projectName>CBS-CUR</projectName>
+
+		<revision>0-SNAPSHOT</revision>
+		<releaseRepoUrl>https://csvd-015.ss-inf.nsx1.census.gov:8443/nexus/content/repositories/releases/</releaseRepoUrl>
+		<snapshotsRepoUrl>https://csvd-015.ss-inf.nsx1.census.gov:8443/nexus/content/repositories/snapshots/</snapshotsRepoUrl>
+		<nexusPublicUrl>https://csvd-015.ss-inf.nsx1.census.gov:8443/nexus/content/groups/public/</nexusPublicUrl>
+		<deployRepoUrl>${releaseRepoUrl}</deployRepoUrl>
+		<isRelease>true</isRelease>
+		
+    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.version>1.8</java.version>
+		<junit.version>4.12</junit.version>
+		<junit.jupiter.version>5.0.0</junit.jupiter.version>
+		<junit.vintage.version>${junit.version}.0</junit.vintage.version>
+		<junit.platform.version>1.0.0</junit.platform.version>
+		<jacoco.version>0.7.5.201505241946</jacoco.version>
+	</properties>  
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>gov.census.cbs</groupId>
+  <artifactId>CBS-CUR</artifactId>
+  <version>${revision}</version>
+  <packaging>war</packaging>
+  <name>basicWebappJunit</name>
+	
+  <profiles>
+  
+	<profile>
+		<id>Snapshots</id>
+		<activation>
+			<property>
+				<name>snapshots</name>
+				<value>yes</value>
+			</property>
+		</activation>		
+	    <distributionManagement>
+			<repository>
+			  <id>nexusSnapshots</id>  <!-- MUST match the <server> tag in maven settings.xml -->
+			  <name>Snapshot Repo</name>
+			  <url>${snapshotsRepoUrl}</url>
+			</repository>
+		</distributionManagement>
+	</profile>	
+  
+	<profile>
+		<id>Releases</id>
+		<activation>
+			<property>
+				<name>snapshots</name>
+				<value>no</value>
+			</property>
+		</activation>		
+	    <distributionManagement>
+			<repository>
+			  <id>nexusReleases</id>  <!-- MUST match the <server> tag in maven settings.xml -->
+			  <name>Releases Repo</name>
+			  <url>${releaseRepoUrl}</url>
+			</repository>
+		</distributionManagement>
+	</profile>	
+  
+	<profile>
+		<id>DeployFileToNexus</id>
+		<activation>
+			<property>
+				<name>deployFileToNexus</name>
+				<value>yes</value>
+			</property>
+		</activation>		
+	    <distributionManagement>
+			<repository>
+			  <id>nexusReleases</id>  <!-- MUST match the <server> tag in maven settings.xml -->
+			  <name>Releases Repo</name>
+			  <url>${releaseRepoUrl}</url>
+			</repository>
+		</distributionManagement>
+		
+ 	    <build>
+			<finalName>basicWebappJunit</finalName>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>2.8.2</version>
+					<goals>
+						<goal>deploy-file</goal>
+					</goals>
+					<configuration>
+						<repositoryId>nexusReleases</repositoryId> <!-- MUST match the <server> tag in maven settings.xml -->
+						<url>${releaseRepoUrl}</url>
+						<artifactId>${project.artifactId}</artifactId>
+						<groupId>${project.groupId}</groupId>
+						<version>${revision}</version>
+						<file>${project.build.directory}/${project.build.finalName}.${project.packaging}</file>
+					</configuration>
+				</plugin>
+			</plugins>
+		</build>		
+		
+	</profile>	
+  
+	<profile>
+		<id>DoBuild</id>
+		<activation>
+			<property>
+				<name>doBuild</name>
+				<value>yes</value>
+			</property>
+		</activation>		
+
+		  <dependencies>
+				<dependency>
+				  <groupId>javax</groupId>
+				  <artifactId>javaee-web-api</artifactId>
+				  <version>6.0</version>
+				  <scope>provided</scope>
+				</dependency>
+				
+				  <dependency>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+					<version>1.2.17</version>
+				</dependency>
+
+				<dependency>
+					<groupId>org.junit.jupiter</groupId>
+					<artifactId>junit-jupiter-api</artifactId>
+					<version>${junit.jupiter.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>junit</groupId>
+					<artifactId>junit</artifactId>
+					<version>${junit.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<!-- Only required to run tests in an IDE that bundles an older version -->
+				<dependency>
+					<groupId>org.junit.platform</groupId>
+					<artifactId>junit-platform-launcher</artifactId>
+					<version>${junit.platform.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<!-- Only required to run tests in an IDE that bundles an older version -->
+				<dependency>
+					<groupId>org.junit.jupiter</groupId>
+					<artifactId>junit-jupiter-engine</artifactId>
+					<version>${junit.jupiter.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<!-- Only required to run tests in an IDE that bundles an older version -->
+				<dependency>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+					<version>${junit.vintage.version}</version>
+					<scope>test</scope>
+				</dependency>
+
+
+				<dependency>
+					<groupId>org.mockito</groupId>
+					<artifactId>mockito-core</artifactId>
+					<version>2.10.0</version>
+					<scope>test</scope>
+				</dependency>
+				
+				<!--  mockito dependencies -->
+				<dependency>
+					<groupId>net.bytebuddy</groupId>
+					<artifactId>byte-buddy</artifactId>
+					<version>1.7.4</version>
+					<scope>test</scope>
+				</dependency>
+						<dependency>
+							<groupId>com.google.code.findbugs</groupId>
+							<artifactId>jsr305</artifactId>
+							<version>3.0.1</version>
+						</dependency>
+						<dependency>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>1.16.18</version>
+							<scope>provided</scope>
+						</dependency>
+				<dependency>
+					<groupId>net.bytebuddy</groupId>
+					<artifactId>byte-buddy-agent</artifactId>
+					<version>1.7.4</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.objenesis</groupId>
+					<artifactId>objenesis</artifactId>
+					<version>2.6</version>
+					<scope>test</scope>
+				</dependency>
+
+				<dependency>
+					<groupId>org.hamcrest</groupId>
+					<artifactId>hamcrest-core</artifactId>
+					<version>1.3</version>
+					<scope>test</scope>
+				</dependency>    
+			
+		  </dependencies>
+		
+		<build>
+			<finalName>basicWebappJunit</finalName>
+			<plugins>	
+			
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>		
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.19.1</version>
+					<configuration>
+						<includes>
+							<include>**/Test*.java</include>
+							<include>**/*Test.java</include>
+							<include>**/*Tests.java</include>
+							<include>**/*TestCase.java</include>
+						</includes>
+						<properties>
+							<!-- <includeTags>fast</includeTags> -->
+							<excludeTags>slow</excludeTags>
+							<!--
+							<configurationParameters>
+								junit.jupiter.conditions.deactivate = *
+							</configurationParameters>
+							-->
+						</properties>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.junit.platform</groupId>
+							<artifactId>junit-platform-surefire-provider</artifactId>
+							<version>${junit.platform.version}</version>
+						</dependency>
+					</dependencies>
+				</plugin>    
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>2.3.2</version>
+					<configuration>
+					  <source>1.8</source>
+					  <target>1.8</target>
+					</configuration>
+					   <executions>
+						 <execution>
+						   <id>default-compile</id>
+						   <phase>compile</phase>
+						   <goals>
+							  <goal>compile</goal>
+						   </goals>
+						   <configuration>
+							 <skipMain>false</skipMain>
+							 <skipTest>false</skipTest>
+						   </configuration>
+						 </execution>
+					   </executions>
+
+					
+					
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.1.1</version>
+					<configuration>
+					  <failOnMissingWebXml>false</failOnMissingWebXml>
+					</configuration>
+				</plugin>
+	  
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco.version}</version>
+					<executions>
+						<execution>
+							<id>prepare-agent</id>
+							<goals>
+								<goal>prepare-agent</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>report</id>
+							<phase>prepare-package</phase>
+							<goals>
+								<goal>report</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>post-unit-test</id>
+							<phase>test</phase>
+							<goals>
+								<goal>report</goal>
+							</goals>
+							<configuration>
+								<!-- Sets the path to the file which contains the execution data. -->
+
+								<dataFile>target/jacoco.exec</dataFile>
+								<!-- Sets the output directory for the code coverage report. -->
+								<outputDirectory>target/jacoco-ut</outputDirectory>
+							</configuration>
+						</execution>
+					</executions>
+					<configuration>
+						<systemPropertyVariables>
+							<jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+						</systemPropertyVariables>
+					</configuration>
+				</plugin>
+
+				<plugin> 
+					<groupId>org.codehaus.mojo</groupId> 
+					<artifactId>findbugs-maven-plugin</artifactId> 
+					<version>3.0.5</version> 
+					<configuration> 
+						<!-- 
+						Enables analysis which takes more memory but finds more bugs. 
+						If you run out of memory, changes the value of the effort element 
+						to 'Low'. 
+						--> 
+						<effort>Max</effort> 
+						<!-- Build doesn't fail if problems are found --> 
+						<failOnError>false</failOnError> 
+						<!-- Reports all bugs (other values are medium and max) --> 
+						<threshold>Low</threshold> 
+						<!-- Produces XML report --> 
+						<xmlOutput>true</xmlOutput> 
+						<!-- Configures the directory in which the XML report is created --> 
+						<findbugsXmlOutputDirectory>${project.build.directory}/findbugs</findbugsXmlOutputDirectory> 
+					</configuration> 
+					<executions> 
+						<!-- 
+						Ensures that FindBugs inspects source code when project is compiled.   
+						--> 
+						<execution> 
+						<id>analyze-compile</id> 
+						<phase>compile</phase> 
+						<goals> 
+							<goal>check</goal> 
+							</goals> 
+						</execution> 
+					</executions> 
+				</plugin>
+
+				 <plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-pmd-plugin</artifactId>
+					<version>3.8</version> 
+					<configuration> 
+					   <targetJdk>1.8</targetJdk>
+					   <linkXref>false</linkXref> 
+					   <failOnViolation>true</failOnViolation> 
+					   <failurePriority>1</failurePriority> 
+						  </configuration> 
+					 <executions> 
+						<execution> 
+						  <id>analyze-compile</id> 
+						  <phase>compile</phase> 
+						  <goals> 
+							<goal>check</goal> 
+						  </goals> 
+						</execution> 
+					 </executions> 
+				   </plugin>
+			</plugins>
+		</build>		
+	</profile>	
+	
+	<profile>
+		<id>DoGetArtifactFromNexus</id>
+		<activation>
+			<property>
+				<name>doGetArtifactFromNexus</name>
+				<value>yes</value>
+			</property>
+		</activation>		
+		
+		  <build>
+			<finalName>basicWebappJunit</finalName>
+			<plugins>	
+
+				  <plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>3.0.2</version>
+					<configuration>
+					  <artifactItems>
+						<artifactItem>
+						  <groupId>gov.census.cbs</groupId>
+						  <artifactId>CBS-CUR</artifactId>
+						  <version>${revision}</version>
+						  <type>${project.packaging}</type>
+						  <overWrite>true</overWrite>
+						  <outputDirectory>${project.build.directory}</outputDirectory>
+						  <destFileName>${project.build.finalName}.${project.packaging}</destFileName>
+						</artifactItem>
+					  </artifactItems>
+					  <!-- other configurations here -->
+					  <outputAbsoluteArtifactFilename>true</outputAbsoluteArtifactFilename>
+					  <localRepositoryDirectory>${project.build.directory}</localRepositoryDirectory>
+					</configuration>
+				  </plugin>
+			</plugins>
+		  </build>		
+	</profile>	
+	
+	<profile>
+		<id>DoDeploy</id>
+		<activation>
+			<property>
+				<name>doAppDeploy</name>
+				<value>yes</value>
+			</property>
+		</activation>		
+		
+		  <build>
+			<finalName>basicWebappJunit</finalName>
+			<plugins>	
+			
+				  <plugin>
+					<groupId>com.oracle.weblogic</groupId> 
+					<artifactId>weblogic-maven-plugin</artifactId> 
+					<version>12.1.3-0-0</version> 
+					<configuration> 
+					  <oracleHome>${oracleHome}</oracleHome>
+					  <remote>true</remote>
+					  <upload>true</upload>		  
+						  <!--The admin URL where the app is deployed. Here use the plugin's default value t3://localhost:7001-->
+						  <adminurl>${oracleServerUrl}</adminurl>
+						  <user>${oracleUsername}</user> 
+						  <password>${oraclePassword}</password>
+						  <!--The location of the file or directory to be deployed-->
+						  <source>${project.build.directory}/${project.build.finalName}.${project.packaging}</source>
+						  <!--source>${project.build.directory}/${projectName}-${revision}.${project.packaging}</source-->
+						  <!--The target servers where the application is deployed. Here use the plugin's default value AdminServer-->
+						  <!--targets>${oracleServerName}</targets-->
+						  <verbose>true</verbose>
+						  <name>${project.build.finalName}</name>
+					  
+					</configuration> 
+					<executions>
+					  <!--Deploy the application to the server-->
+					  <execution>
+						<phase>pre-integration-test</phase> 
+						<goals> 
+						  <goal>deploy</goal> 
+						</goals>
+						<configuration> 
+						  <!--The admin URL where the app is deployed. Here use the plugin's default value t3://localhost:7001-->
+						  <adminurl>${oracleServerUrl}</adminurl>
+						  <user>${oracleUsername}</user> 
+						  <password>${oraclePassword}</password>
+						  <!--The location of the file or directory to be deployed-->
+						  <source>${project.build.directory}/${project.build.finalName}.${project.packaging}</source>
+						  <!--source>${project.build.directory}/${projectName}-${revision}.${project.packaging}</source-->
+						  <!--The target servers where the application is deployed. Here use the plugin's default value AdminServer-->
+						  <!--targets>${oracleServerName}</targets-->
+						  <verbose>true</verbose>
+						  <remote>true</remote>
+						  <upload>true</upload>			  
+						  <name>${project.build.finalName}</name>
+						</configuration> 
+					  </execution> 
+					</executions>
+				  </plugin>
+			  
+			</plugins>
+		  </build>		
+		
+  
+  
+	</profile>	
+	
+	
+  </profiles>
+
+  
+  
+
+</project>
