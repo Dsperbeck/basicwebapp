@@ -1,5 +1,10 @@
 pipeline {
-agent any
+  agent {
+    kubernetes {
+      label 'maven'
+      defaultContainer 'jnlp'
+    }
+  }
 	stages {
 		stage ('dev build stage') {
 			when {
