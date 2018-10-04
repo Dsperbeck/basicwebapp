@@ -2,7 +2,7 @@ pipeline {
   agent {
     kubernetes {
       label 'maven'
-      defaultContainer 'jnlp'
+      defaultContainer 'jnlp' 
     }
   }
 	stages {
