@@ -1,14 +1,9 @@
 pipeline {
-  agent {
-    kubernetes {
-      label 'maven'
-      defaultContainer 'jnlp' 
-    }
-  }
+	agent { label 'maven' }
 	stages {
 		stage ('dev build stage') {
 			when {
-				branch 'dev'
+				expression { return env.branch_name == "dev" || env.branch_name.contains("feature") } 
 			}
 			steps {
 				echo 'dev branch'	
