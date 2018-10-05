@@ -3,7 +3,7 @@ pipeline {
 	stages {
 		stage ('dev build stage') {
 			when {
-				when { expression { return env.branch_name == "dev" || env.branch_name.contains("feature") } }
+				expression { return env.branch_name == "dev" || env.branch_name.contains("feature") } 
 			}
 			steps {
 				echo 'dev branch'	
